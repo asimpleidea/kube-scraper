@@ -17,30 +17,21 @@ package scraper
 import (
 	"fmt"
 
-	poller "github.com/SunSince90/website-poller"
+	"cloud.google.com/go/pubsub"
 )
 
 var (
-	pages = map[string]*poller.Page{}
+	topic *pubsub.Topic
 )
 
-// SetPages sets the pages from the poller
-func SetPages(polledPages []poller.Page) error {
+// SetPubSubTopic sets the pubsub topic
+func SetPubSubTopic(t *pubsub.Topic) error {
 	lock.Lock()
 	defer lock.Unlock()
 
-	if len(pages) > 0 {
-		return fmt.Errorf("pages already set")
+	if topic != nil {
+		topic = t
 	}
 
-	for i, page := range polledPages {
-		if page.ID == nil {
-			log.Warn().Str("url", page.URL).Msg("no id found, skipping...")
-			continue
-		}
-		id := *page.ID
-		pages[id] = &polledPages[i]
-	}
-
-	return nil
+	return fmt.Errorf("topic already set")
 }
