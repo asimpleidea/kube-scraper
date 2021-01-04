@@ -15,8 +15,8 @@ var (
 
 // SetTelegramBot sets up the telegram bot
 func SetTelegramBot(token string) (err error) {
-	tLock.Lock()
-	defer tLock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 
 	if len(token) == 0 {
 		return fmt.Errorf("no token provided")
@@ -38,8 +38,8 @@ func SetTelegramBot(token string) (err error) {
 
 // SetAdminChatID sets the chat id with the admin. This is used
 func SetAdminChatID(id int64) error {
-	tLock.Lock()
-	defer tLock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 
 	if adminChatID > 0 {
 		adminChatID = id
