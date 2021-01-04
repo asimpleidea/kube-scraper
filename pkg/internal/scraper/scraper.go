@@ -16,12 +16,14 @@ package scraper
 
 import (
 	"os"
+	"sync"
 
 	"github.com/rs/zerolog"
 )
 
 var (
-	log zerolog.Logger
+	log  zerolog.Logger
+	lock sync.Locker
 )
 
 func init() {
