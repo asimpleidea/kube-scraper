@@ -15,24 +15,28 @@
 package kubescraper
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 
+	"cloud.google.com/go/pubsub"
 	bpb "github.com/SunSince90/kube-scraper-backend/pkg/pb"
 	websitepoller "github.com/SunSince90/website-poller"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 	tgbotapi "gopkg.in/telegram-bot-api.v4"
 	"gopkg.in/yaml.v3"
 )
 
 var (
-	log   zerolog.Logger
-	pages []websitepoller.Page
-	opts  *HandlerOptions
-	conn  *grpc.ClientConn
+	log       zerolog.Logger
+	pages     []websitepoller.Page
+	opts      *HandlerOptions
+	conn      *grpc.ClientConn
+	pubsubcli *pubsub.Client
 )
 
 func init() {
@@ -125,5 +129,21 @@ func run(cmd *cobra.Command, args []string) {
 		opts.BackendClient = bpb.NewBackendClient(conn)
 	} else {
 		log.Info().Msg("backend flags skipped because either address or port are not provided")
+	}
+
+	// -- Get pubsub client
+	if topicName != "" && projectID != "" && gcpServAcc != "" {
+		pscli, err := pubsub.NewClient(context.Background(), projectID, option.WithServiceAccountFile(gcpServAcc))
+		if err != nil {
+			if conn != nil {
+				conn.Close()
+			}
+			log.Fatal().Err(err).Str("topic-name", topicName).Str("gcp-service-account", gcpServAcc).Str("project-id", projectID).Msg("could not establish a gRPC connection")
+			return
+		}
+		pubsubcli = pscli
+		opts.PubSubTopic = pubsubcli.Topic(topicName)
+	} else {
+		log.Info().Msg("pubsub flags skipped because either topic or service account are not provided")
 	}
 }
