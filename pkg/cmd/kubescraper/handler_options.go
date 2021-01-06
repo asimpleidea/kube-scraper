@@ -15,6 +15,8 @@
 package kubescraper
 
 import (
+	"net/http"
+
 	"cloud.google.com/go/pubsub"
 	bpb "github.com/SunSince90/kube-scraper-backend/pkg/pb"
 	tgbotapi "gopkg.in/telegram-bot-api.v4"
@@ -32,3 +34,6 @@ type HandlerOptions struct {
 	// PubSubTopic where to publish messages
 	PubSubTopic *pubsub.Topic
 }
+
+// ResponseHandler is a function is executed after each http call completed.
+type ResponseHandler func(*HandlerOptions, string, *http.Response, error)
