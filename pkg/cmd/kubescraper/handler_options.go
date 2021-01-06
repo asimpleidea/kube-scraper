@@ -15,6 +15,7 @@
 package kubescraper
 
 import (
+	"cloud.google.com/go/pubsub"
 	bpb "github.com/SunSince90/kube-scraper-backend/pkg/pb"
 	tgbotapi "gopkg.in/telegram-bot-api.v4"
 )
@@ -28,4 +29,6 @@ type HandlerOptions struct {
 	AdminChatID int64
 	// BackendClient is the client that comunicates with the backend pod
 	BackendClient bpb.BackendClient
+	// PubSubTopic where to publish messages
+	PubSubTopic *pubsub.Topic
 }
