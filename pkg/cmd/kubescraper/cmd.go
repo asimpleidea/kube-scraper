@@ -21,18 +21,21 @@ import (
 	websitepoller "github.com/SunSince90/website-poller"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+	tgbotapi "gopkg.in/telegram-bot-api.v4"
 	"gopkg.in/yaml.v3"
 )
 
 var (
 	log   zerolog.Logger
 	pages []websitepoller.Page
+	opts  *HandlerOptions
 )
 
 func init() {
 	output := zerolog.ConsoleWriter{Out: os.Stdout}
 	log = zerolog.New(output).With().Timestamp().Logger()
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	opts = &HandlerOptions{}
 }
 
 // NewCommand returns the cobra command
@@ -86,4 +89,17 @@ func run(cmd *cobra.Command, args []string) {
 		return
 	}
 	pages = _pages
+
+	// -- Is telegram set?
+	if telegramToken != "" {
+		_bot, err := tgbotapi.NewBotAPI(telegramToken)
+		if err != nil {
+			log.Fatal().Err(err).Str("telegram-token", telegramToken).Msg("could not start telegram bot, exiting...")
+			return
+		}
+
+		log.Debug().Str("account", _bot.Self.UserName).Msg("authorized")
+		_bot.Debug = debug
+		opts.TelegramBotClient = _bot
+	}
 }
