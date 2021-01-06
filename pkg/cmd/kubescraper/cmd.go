@@ -101,5 +101,11 @@ func run(cmd *cobra.Command, args []string) {
 		log.Debug().Str("account", _bot.Self.UserName).Msg("authorized")
 		_bot.Debug = debug
 		opts.TelegramBotClient = _bot
+
+		// -- Get the admin chat
+		if adminChatID > 0 {
+			opts.AdminChatID = adminChatID
+			log.Debug().Int64("chat-id", adminChatID).Msg("parsed admin chat ID")
+		}
 	}
 }
