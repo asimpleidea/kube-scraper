@@ -14,7 +14,10 @@
 
 package kubescraper
 
-import tgbotapi "gopkg.in/telegram-bot-api.v4"
+import (
+	bpb "github.com/SunSince90/kube-scraper-backend/pkg/pb"
+	tgbotapi "gopkg.in/telegram-bot-api.v4"
+)
 
 // HandlerOptions contains data, such as variables and clients, that
 // are passed to a handler so that the function can use.
@@ -23,4 +26,6 @@ type HandlerOptions struct {
 	TelegramBotClient *tgbotapi.BotAPI
 	// AdminChatID is the ID of the chat with the admin
 	AdminChatID int64
+	// BackendClient is the client that comunicates with the backend pod
+	BackendClient bpb.BackendClient
 }
