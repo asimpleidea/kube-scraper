@@ -21,4 +21,6 @@ import tgbotapi "gopkg.in/telegram-bot-api.v4"
 type HandlerOptions struct {
 	// TelegramBotClient is the bot client and can send messages
 	TelegramBotClient *tgbotapi.BotAPI
+	// AdminChatID is the ID of the chat with the admin
+	AdminChatID int64
 }
