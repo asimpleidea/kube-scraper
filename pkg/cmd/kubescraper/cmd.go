@@ -18,7 +18,11 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	"cloud.google.com/go/pubsub"
 	bpb "github.com/SunSince90/kube-scraper-backend/pkg/pb"
@@ -63,6 +67,7 @@ func NewCommand(h ResponseHandler) *cobra.Command {
 		Long: `The path file must be a valid path containing the websites and the polling options as
 defined in scrape a webiste and notify users of a certain result.`,
 		PreRun: preRun,
+		Run:    run,
 	}
 
 	// -- Flags
@@ -152,4 +157,64 @@ func preRun(cmd *cobra.Command, args []string) {
 	} else {
 		log.Info().Msg("pubsub flags skipped because either topic or service account are not provided")
 	}
+}
+
+func run(cmd *cobra.Command, args []string) {
+	// -- Init
+	log.Info().Msg("starting...")
+	ctx, canc := context.WithCancel(context.Background())
+	pollers := map[string]websitepoller.Poller{}
+	var wg sync.WaitGroup
+
+	// -- Create the pollers
+	for i := range pages {
+		p, err := websitepoller.New(&pages[i])
+		if err != nil {
+			if conn != nil {
+				conn.Close()
+			}
+			if pubsubcli != nil {
+				pubsubcli.Close()
+			}
+			log.Fatal().Err(err).Int("index", i).Msg("error while creating a poller for page with this index, exiting...")
+		}
+
+		p.SetHandlerFunc(func(id string, resp *http.Response, err error) {
+			respHandler(opts, id, resp, err)
+		})
+		pollers[p.GetID()] = p
+	}
+	log.Debug().Msg("all pollers set up")
+
+	// -- Start the pollers
+	wg.Add(len(pollers))
+	for _, poller := range pollers {
+		go func(p websitepoller.Poller) {
+			p.Start(ctx, true)
+			wg.Done()
+		}(poller)
+	}
+	log.Info().Msg("all pollers started, waiting for shutdown command")
+
+	// -- Graceful shutdown
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(
+		signalChan,
+		syscall.SIGHUP,  // kill -SIGHUP XXXX
+		syscall.SIGINT,  // kill -SIGINT XXXX or Ctrl+c
+		syscall.SIGQUIT, // kill -SIGQUIT XXXX
+	)
+
+	<-signalChan
+	log.Info().Msg("exit requested")
+
+	// -- Close all connections and shut down
+	canc()
+	if conn != nil {
+		conn.Close()
+	}
+	if pubsubcli != nil {
+		pubsubcli.Close()
+	}
+	log.Info().Msg("goodbye!")
 }
