@@ -15,12 +15,15 @@
 package kubescraper
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 
+	bpb "github.com/SunSince90/kube-scraper-backend/pkg/pb"
 	websitepoller "github.com/SunSince90/website-poller"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
 	tgbotapi "gopkg.in/telegram-bot-api.v4"
 	"gopkg.in/yaml.v3"
 )
@@ -29,6 +32,7 @@ var (
 	log   zerolog.Logger
 	pages []websitepoller.Page
 	opts  *HandlerOptions
+	conn  *grpc.ClientConn
 )
 
 func init() {
@@ -107,5 +111,19 @@ func run(cmd *cobra.Command, args []string) {
 			opts.AdminChatID = adminChatID
 			log.Debug().Int64("chat-id", adminChatID).Msg("parsed admin chat ID")
 		}
+	}
+
+	// -- Get the backend
+	if backendAddress != "" && backendPort > 0 {
+		endpoint := fmt.Sprintf("%s:%d", backendAddress, backendPort)
+		_conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+		if err != nil {
+			log.Fatal().Err(err).Str("endpoint", endpoint).Msg("could not establish a gRPC connection")
+		}
+		conn = _conn
+		log.Debug().Str("endpoint", endpoint).Msg("parsed backend flags")
+		opts.BackendClient = bpb.NewBackendClient(conn)
+	} else {
+		log.Info().Msg("backend flags skipped because either address or port are not provided")
 	}
 }
