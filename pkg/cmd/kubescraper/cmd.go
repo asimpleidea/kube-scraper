@@ -32,11 +32,12 @@ import (
 )
 
 var (
-	log       zerolog.Logger
-	pages     []websitepoller.Page
-	opts      *HandlerOptions
-	conn      *grpc.ClientConn
-	pubsubcli *pubsub.Client
+	log         zerolog.Logger
+	pages       []websitepoller.Page
+	opts        *HandlerOptions
+	conn        *grpc.ClientConn
+	pubsubcli   *pubsub.Client
+	respHandler ResponseHandler
 )
 
 func init() {
@@ -47,7 +48,12 @@ func init() {
 }
 
 // NewCommand returns the cobra command
-func NewCommand( /*handlerFunction*/ ) *cobra.Command {
+func NewCommand(h ResponseHandler) *cobra.Command {
+	if h == nil {
+		log.Fatal().Msg("no response handler provided")
+		return nil
+	}
+	respHandler = h
 
 	// -- The command
 	cmd := &cobra.Command{
