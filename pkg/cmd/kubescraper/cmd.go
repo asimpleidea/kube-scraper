@@ -14,7 +14,26 @@
 
 package kubescraper
 
-import "github.com/spf13/cobra"
+import (
+	"io/ioutil"
+	"os"
+
+	websitepoller "github.com/SunSince90/website-poller"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
+)
+
+var (
+	log   zerolog.Logger
+	pages []websitepoller.Page
+)
+
+func init() {
+	output := zerolog.ConsoleWriter{Out: os.Stdout}
+	log = zerolog.New(output).With().Timestamp().Logger()
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+}
 
 // NewCommand returns the cobra command
 func NewCommand( /*handlerFunction*/ ) *cobra.Command {
@@ -26,6 +45,7 @@ func NewCommand( /*handlerFunction*/ ) *cobra.Command {
 		Short:   "scrape websites defined in the path file",
 		Long: `The path file must be a valid path containing the websites and the polling options as
 defined in scrape a webiste and notify users of a certain result.`,
+		Run: run,
 	}
 
 	// -- Flags
@@ -39,4 +59,31 @@ defined in scrape a webiste and notify users of a certain result.`,
 	cmd.Flags().StringVar(&projectID, "gcp-project-id", "", "the ID of the gcp/firestore project")
 
 	return cmd
+}
+
+func run(cmd *cobra.Command, args []string) {
+	if debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
+	// -- Get the path
+	if len(args) == 0 {
+		log.Fatal().Msg("no path set, exiting...")
+		return // unnecessary but just for clarity
+	}
+	if len(args) > 1 {
+		log.Warn().Int("args-len", len(args)).Msg("multiple paths are not supported yet: only the first one will be used")
+	}
+	yamlPath := args[0]
+	var _pages []websitepoller.Page
+	pagesByte, err := ioutil.ReadFile(yamlPath)
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not parse yaml file, exiting")
+		return
+	}
+	if err := yaml.Unmarshal(pagesByte, &_pages); err != nil {
+		log.Fatal().Err(err).Msg("could not unmarshal yaml file, exiting")
+		return
+	}
+	pages = _pages
 }
