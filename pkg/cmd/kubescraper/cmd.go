@@ -56,7 +56,7 @@ func NewCommand( /*handlerFunction*/ ) *cobra.Command {
 		Short:   "scrape websites defined in the path file",
 		Long: `The path file must be a valid path containing the websites and the polling options as
 defined in scrape a webiste and notify users of a certain result.`,
-		Run: run,
+		PreRun: preRun,
 	}
 
 	// -- Flags
@@ -72,7 +72,7 @@ defined in scrape a webiste and notify users of a certain result.`,
 	return cmd
 }
 
-func run(cmd *cobra.Command, args []string) {
+func preRun(cmd *cobra.Command, args []string) {
 	if debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
