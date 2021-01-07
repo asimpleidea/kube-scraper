@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	cloud.google.com/go/pubsub v1.9.1
-	github.com/PuerkitoBio/goquery v1.6.0
 	github.com/SunSince90/kube-scraper-backend v0.5.0
 	github.com/SunSince90/website-poller v0.2.1
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible // indirect
