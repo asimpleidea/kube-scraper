@@ -80,6 +80,10 @@ cd kube-scraper
 
 ## Implement
 
+Create a new repository on your account and just copy the contents of
+`main.go` and `scrape.go` included on the root folder of this project to the
+root folder of your project.
+
 You should only implement the `scrape` function on `scrape.go`, unless you want
 to do some more advanced modifications.
 
@@ -104,6 +108,14 @@ Build the container image:
 
 ```bash
 make docker-build docker-push IMG=<image>
+```
+
+### Create the namespace
+
+Skip this if you already have this namespace on your cluster.
+
+```bash
+kubectl create namespace kube-scraper
 ```
 
 ### Create the telegram token secret
@@ -144,7 +156,89 @@ kubectl create secret generic admin-chat-id \
 -n kube-scraper
 ```
 
+### Create the pages ConfigMap
+
+Now, create the pages that you want this scraper to scrape. For example,
+create the following yaml and call it `pages.yaml`:
+
+```yaml
+- id: "phone-12-pro"
+  url: https://www.google.com/
+  headers:
+    "Accept": text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+    "Accept-Language": en-US,it-IT;q=0.8,it;q=0.5,en;q=0.3
+    "Cache-Control": no-cache
+    "Connection": keep-alive
+    "Pragma": no-cache
+  userAgentOptions:
+    randomUA: true
+  pollOptions:
+    frequency: 15
+- id: "phone-12-min"
+  url: https://www.google.com/
+  headers:
+    "Accept": text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+    "Accept-Language": en-US,it-IT;q=0.8,it;q=0.5,en;q=0.3
+    "Cache-Control": no-cache
+    "Connection": keep-alive
+    "Pragma": no-cache
+  userAgentOptions:
+    randomUA: true
+  pollOptions:
+    frequency: 30
+```
+
+Remember that each scraper is supposed to scrape just a website, and you should
+implement and deploy other scrapers for other websites.
+
+Now deploy this as a config map:
+
+```bash
+kubectl create configmap <name-of-the-configmap> \
+--from-file=path/to/pages.yaml \
+-n kube-scraper
+```
+
 ### Create the deployment
+
+Take a look at `volumes` in `deploy/deployment.yaml`:
+
+```yaml
+      volumes:
+      - name: gcp-service-account
+        secret:
+          secretName: gcp-service-account
+      - name: scrape-pages
+        configMap:
+          name: <name-of-the-configmap>
+```
+
+Replace `<name-of-the-configmap>` with the name of the `ConfigMap` you created
+in the [ConfigMap](#create-the-pages-configmap).
+
+Now at `env`:
+
+```yaml
+        env:
+          - name: TELEGRAM_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: telegram-token
+                key: token
+          - name: FIREBASE_PROJECT_ID
+            valueFrom:
+              secretKeyRef:
+                name: firebase-project-id
+                key: project-id
+          - name: ADMIN_CHAT_ID
+            valueFrom:
+              secretKeyRef:
+                name: admin-chat-id
+                key: chat-id
+```
+
+Remove this if you are not using it. These values are using in `command` as the
+already included `deployment.yaml` file. Add or remove values as you see fit.
 
 Replace `<image>` from `deploy/deployment.yaml` with the container image you
 published earlier and then:
