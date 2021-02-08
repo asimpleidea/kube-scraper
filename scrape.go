@@ -15,9 +15,18 @@
 package main
 
 import (
+	"context"
 	"net/http"
+
+	"github.com/SunSince90/kube-scraper/pkg/cmd/kubescraper"
 )
 
 func scrape(id string, resp *http.Response, err error) {
 	// Do your scraping here
+
+	// Example:
+	rdb := kubescraper.GetRedisClient()
+	rdb.Publish(context.Background(), kubescraper.GetRedisPubChannel(), struct {
+		message string
+	}{message: "Hello, world!"})
 }
