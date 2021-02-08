@@ -25,3 +25,9 @@ func WithLogger(l zerolog.Logger) func() {
 		log = l
 	}
 }
+
+type options struct {
+	debug        bool
+	redisAddr    string
+	redisChannel string
+}

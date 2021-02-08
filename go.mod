@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/SunSince90/website-poller v0.3.2
+	github.com/go-redis/redis/v8 v8.5.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/rs/zerolog v1.20.0
 	github.com/spf13/cobra v1.1.1
