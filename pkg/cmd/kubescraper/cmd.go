@@ -39,7 +39,24 @@ var (
 	log         zerolog.Logger
 	pages       []websitepoller.Page
 	respHandler ResponseHandler
+
+	redisClient     *redis.Client
+	redisPubChannel string
 )
+
+// GetRedisClient returns the redis client
+func GetRedisClient() *redis.Client {
+	return redisClient
+}
+
+// GetRedisPubChannel returns the redis channel for publishing events
+func GetRedisPubChannel() string {
+	if len(redisPubChannel) > 0 {
+		return redisPubChannel
+	}
+
+	return defaultRedisChannel
+}
 
 func init() {
 	output := zerolog.ConsoleWriter{Out: os.Stdout}
@@ -90,9 +107,7 @@ defined in scrape a webiste and notify users of a certain result.`,
 			}
 
 			pages = _pages
-
-			// TODO: store redis channe somewhere
-			_ = conf.redisChannel
+			redisPubChannel = conf.redisChannel
 		},
 		Run: func(_ *cobra.Command, _ []string) {
 			run(conf)
@@ -144,11 +159,9 @@ func run(opts *options) {
 			signalChan <- os.Interrupt
 			return
 		}
-
-		// TODO: store redis client somewhere
-		_ = rdb
 		log.Info().Msg("connected to redis")
-		defer rdb.Close()
+		redisClient = rdb
+		defer redisClient.Close()
 
 		// -- Create the pollers
 		pollers := map[string]websitepoller.Poller{}
