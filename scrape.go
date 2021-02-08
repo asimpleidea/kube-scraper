@@ -16,10 +16,8 @@ package main
 
 import (
 	"net/http"
-
-	"github.com/SunSince90/kube-scraper/pkg/cmd/kubescraper"
 )
 
-func scrape(opts *kubescraper.HandlerOptions, id string, resp *http.Response, err error) {
+func scrape(id string, resp *http.Response, err error) {
 	// Do your scraping here
 }

@@ -14,9 +14,14 @@
 
 package kubescraper
 
-import (
-	"net/http"
-)
+import "github.com/rs/zerolog"
 
-// ResponseHandler is a function is executed after each http call completed.
-type ResponseHandler func(string, *http.Response, error)
+// Option defines an option
+type Option func()
+
+// WithLogger puts a custom logger
+func WithLogger(l zerolog.Logger) func() {
+	return func() {
+		log = l
+	}
+}

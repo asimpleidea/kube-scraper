@@ -14,9 +14,6 @@ spec:
         run: scraper-test
     spec:
       volumes:
-      - name: gcp-service-account
-        secret:
-          secretName: gcp-service-account
       - name: scrape-pages
         configMap:
           name: poll-pages
@@ -36,41 +33,8 @@ spec:
         command:
         - /scrape
         - /pages/pages.yaml
-        - --telegram-token
-        - $(TELEGRAM_TOKEN)
-        - --backend-address
-        - backend.kube-scraper
-        - --backend-port
-        - "80"
-        - --admin-chat-id
-        - $(ADMIN_CHAT_ID)
-        - --pubsub-topic-name
-        - poll-result
-        - --gcp-service-account
-        - /credentials/service-account.json
-        - --gcp-project-id
-        - $(FIREBASE_PROJECT_ID)
         - --debug
-        env:
-          - name: TELEGRAM_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: telegram-token
-                key: token
-          - name: FIREBASE_PROJECT_ID
-            valueFrom:
-              secretKeyRef:
-                name: firebase-project-id
-                key: project-id
-          - name: ADMIN_CHAT_ID
-            valueFrom:
-              secretKeyRef:
-                name: admin-chat-id
-                key: chat-id
         volumeMounts:
-        - name: gcp-service-account
-          readOnly: true
-          mountPath: "/credentials"
         - name: scrape-pages
           readOnly: true
           mountPath: "/pages"
