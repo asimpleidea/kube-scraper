@@ -21,8 +21,16 @@ import (
 	"github.com/SunSince90/kube-scraper/pkg/cmd/kubescraper"
 )
 
+// Example of additional flags
+// var (
+// 	flag int
+// )
+
 func main() {
 	cmd := kubescraper.NewCommand(scrape)
+
+	// Add any additional flags here:
+	// cmd.Flags().IntVar(&flag, "another-flag", 5, "the maximum times an error is tollerable")
 
 	if err := cmd.Execute(); err != nil {
 		fmt.Println(err)
